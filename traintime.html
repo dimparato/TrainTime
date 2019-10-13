@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Train Time</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h1 class="text-center">Anytime is Train Time</h1>
+            <h2 class="text-center">Choo Choo. Chee Chee.</h2>
+        </div>
+        <div class="card">
+            <div class="card-header">Current Train Schedule</div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Train Name</th>
+                            <th scope="col">Destination</th>
+                            <th scope="col">Frequency (min)</th>
+                            <th scope="col">Next Arrival</th>
+                            <th scope="col">Minutes Away</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Add Train</div>
+            <div class="card-body">
+                <form>
+                    <div class="form-group">
+                        <label for="name">Train Name</label>
+                        <input class="form-control" id="name"></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Destination</label>
+                        <input class="form-control" id="dest"></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">First Train Time (HH:mm - 24hr Clock)</label>
+                        <input class="form-control" id="firstTime"></input>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyRate">Frequency (min)</label>
+                        <input class="form-control" id="freq"></input>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="newTrain">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery.js"></script>
+<script src="https://momentjs.com/downloads/moment.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.0.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.0.0/firebase-analytics.js"></script>
+
+<script>
+
+    firebase.initializeApp({apiKey: "AIzaSyAEdyo5OggcxXskvMJdfCLCot7oqRRV46k",
+    authDomain: "tryitout-53ee5.firebaseapp.com",
+    databaseURL: "https://tryitout-53ee5.firebaseio.com",
+    projectId: "tryitout-53ee5",
+    storageBucket: "tryitout-53ee5.appspot.com",
+    messagingSenderId: "77542223114",
+    appId: "1:77542223114:web:91d0dbd7f2bfc861885ef3",
+    measurementId: "G-SS40QGQ6G5"});
+
+    firebase.analytics();
+
+    var database = firebase.database();
+
+    // Capture Button Click
+    $("#newEmployee").on("click", function(event) {
+
+        event.preventDefault();
+        var name = $("#name").val().trim();
+        var role = $("#role").val().trim();
+        var startDate = $("#startDate").val().trim();
+        var monthlyRate = $("#monthlyRate").val().trim();
+        var startDateAsMoment = moment(startDate);
+        var today = moment();
+        var monthsWorked = today.diff(startDateAsMoment, "months");
+        var billableHours = monthsWorked * monthlyRate;
+
+        database.ref().push({
+            name: name,
+            role: role,
+            startDate: startDate,
+            monthlyRate: monthlyRate,
+            monthsWorked: monthsWorked,
+            billableHours: billableHours
+        });
+
+    });
+
+    database.ref().on("child_added", function(childSnapshot) {
+        var newRow = $("<tr>");
+        var name = $("<td>").html(childSnapshot.val().name);
+        var role = $("<td>").html(childSnapshot.val().role);
+        var startDate = $("<td>").html(childSnapshot.val().startDate);
+        var monthlyRate = $("<td>").html(childSnapshot.val().monthlyRate);
+        var monthsWorked = $("<td>").html(childSnapshot.val().monthsWorked);
+        var billableHours = $("<td>").html(childSnapshot.val().billableHours);
+        $("tbody").append(newRow.append(name, role, startDate, monthlyRate, monthsWorked, billableHours));
+
+        }, function(error) {
+            console.log("I'm broken: " + error);
+    });
+
+</script>
+</body>
+</html>
