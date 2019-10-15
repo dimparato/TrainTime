@@ -39,15 +39,15 @@
                         <input class="form-control" id="name"></input>
                     </div>
                     <div class="form-group">
-                        <label for="role">Destination</label>
+                        <label for="dest">Destination</label>
                         <input class="form-control" id="dest"></input>
                     </div>
                     <div class="form-group">
-                        <label for="startDate">First Train Time (HH:mm - 24hr Clock)</label>
+                        <label for="firstTime">First Train Time (HH:mm - 24hr Clock)</label>
                         <input class="form-control" id="firstTime"></input>
                     </div>
                     <div class="form-group">
-                        <label for="monthlyRate">Frequency (min)</label>
+                        <label for="freq">Frequency (min)</label>
                         <input class="form-control" id="freq"></input>
                     </div>
                     <button type="submit" class="btn btn-primary" id="newTrain">Submit</button>
@@ -78,25 +78,34 @@
     var database = firebase.database();
 
     // Capture Button Click
-    $("#newEmployee").on("click", function(event) {
+    $("#newTrain").on("click", function(event) {
 
         event.preventDefault();
+
         var name = $("#name").val().trim();
-        var role = $("#role").val().trim();
-        var startDate = $("#startDate").val().trim();
-        var monthlyRate = $("#monthlyRate").val().trim();
-        var startDateAsMoment = moment(startDate);
-        var today = moment();
-        var monthsWorked = today.diff(startDateAsMoment, "months");
-        var billableHours = monthsWorked * monthlyRate;
+        var dest = $("#dest").val().trim();
+        var firstTime = $("#firstTime").val().trim();
+        var freq = $("#freq").val().trim();
+        var firstTimeAsMoment = moment(firstTime);
+        var currentTime = moment();
+        var minutesAway;
+        var accumulatedTime;
+        var nextArrival;
+        
+        for (let i = firstTimeAsMoment; i < currentTime; i = moment(i).add(freq, "minutes")) {
+            accumulatedTime = i;
+        }
+        
+        minutesAway = currentTime.diff(accumulatedTime, "minutes");
+        nextArrival = moment(accumulatedTime).add(freq, "minutes");
 
         database.ref().push({
             name: name,
-            role: role,
-            startDate: startDate,
-            monthlyRate: monthlyRate,
-            monthsWorked: monthsWorked,
-            billableHours: billableHours
+            dest: dest,
+            firstTime: firstTime,
+            freq: freq,
+            minutesAway: minutesAway,
+            nextArrival: moment(nextArrival).format("HH:mm")
         });
 
     });
@@ -104,12 +113,12 @@
     database.ref().on("child_added", function(childSnapshot) {
         var newRow = $("<tr>");
         var name = $("<td>").html(childSnapshot.val().name);
-        var role = $("<td>").html(childSnapshot.val().role);
-        var startDate = $("<td>").html(childSnapshot.val().startDate);
-        var monthlyRate = $("<td>").html(childSnapshot.val().monthlyRate);
-        var monthsWorked = $("<td>").html(childSnapshot.val().monthsWorked);
-        var billableHours = $("<td>").html(childSnapshot.val().billableHours);
-        $("tbody").append(newRow.append(name, role, startDate, monthlyRate, monthsWorked, billableHours));
+        var dest = $("<td>").html(childSnapshot.val().dest);
+        var firstTime = $("<td>").html(childSnapshot.val().firstTime);
+        var freq = $("<td>").html(childSnapshot.val().freq);
+        var minutesAway = $("<td>").html(childSnapshot.val().minutesAway);
+        var nextArrival = $("<td>").html(childSnapshot.val().nextArrival);
+        $("tbody").append(newRow.append(name, dest, freq, nextArrival, minutesAway));
 
         }, function(error) {
             console.log("I'm broken: " + error);
